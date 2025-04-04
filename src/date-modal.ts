@@ -1,34 +1,43 @@
-import { App, FuzzyMatch, FuzzySuggestModal } from "obsidian";
-import { startOfDay, addDays, format, startOfISOWeek } from "date-fns";
+import { SuggestModal } from "obsidian";
+import { startOfDay, addDays, format } from "date-fns";
+import * as chrono from "chrono-node";
+
+import GotoDatePlugin from "./main";
 
 interface DateOption {
 	title: string;
 	date: Date;
 }
 
-export class DateModal extends FuzzySuggestModal<DateOption> {
+export class DateModal extends SuggestModal<DateOption> {
 	onSubmit: (result: DateOption) => void;
+	defaultItems: DateOption[];
 
-	constructor(app: App, onSubmit: (result: DateOption) => void) {
-		super(app);
+	constructor(
+		plugin: GotoDatePlugin,
+		onSubmit: (result: DateOption) => void
+	) {
+		super(plugin.app);
 		this.onSubmit = onSubmit;
 		this.setTitle("Target note");
 		this.setPlaceholder("Select a date to move the todo to...");
+
+		this.defaultItems = this.getDefaultItems();
 	}
 
-	getItems(): DateOption[] {
+	getDefaultItems(): DateOption[] {
 		const options = [
+			{
+				title: "Today",
+				date: startOfDay(new Date()),
+			},
 			{
 				title: "Tomorrow",
 				date: startOfDay(addDays(new Date(), 1)),
 			},
 			{
-				title: "Next week",
-				date: startOfISOWeek(addDays(new Date(), 7)),
-			},
-			{
-				title: "Today",
-				date: startOfDay(new Date()),
+				title: "Yesterday",
+				date: startOfDay(addDays(new Date(), -1)),
 			},
 		];
 
@@ -43,26 +52,56 @@ export class DateModal extends FuzzySuggestModal<DateOption> {
 		return options;
 	}
 
-	getItemText(item: DateOption): string {
-		return item.title + " " + item.date.toISOString().substring(0, 10);
+	getSuggestions(query: string): DateOption[] | Promise<DateOption[]> {
+		const parsed = chrono.en.GB.parseDate(query);
+		if (parsed) {
+			const date = startOfDay(parsed);
+			return [
+				{
+					title: format(date, "EEEE"),
+					date,
+				},
+			];
+		}
+
+		if (!query.trim().length) {
+			return this.defaultItems;
+		}
+
+		return this.defaultItems.filter((item) => {
+			return this.getItemText(item).includes(query.toLowerCase());
+		});
 	}
 
-	onChooseItem(item: DateOption, evt: MouseEvent | KeyboardEvent): void {
+	getItemText(item: DateOption): string {
+		return (
+			item.title +
+			" " +
+			item.date.toISOString().substring(0, 10)
+		).toLowerCase();
+	}
+
+	onChooseSuggestion(
+		item: DateOption,
+		evt: MouseEvent | KeyboardEvent
+	): void {
 		this.close();
 		this.onSubmit(item);
 	}
 
-	renderSuggestion(item: FuzzyMatch<DateOption>, el: HTMLElement) {
+	renderSuggestion(item: DateOption, el: HTMLElement) {
 		el.createEl("div", {
-			text: item.item.title,
+			text: item.title,
 		}).setCssStyles({ fontWeight: "600" });
 		el.createEl("small", {
-			text: item.item.date.toISOString().substring(0, 10),
+			text: item.date.toISOString().substring(0, 10),
 		});
 	}
 }
 
-export const showDateModal: (app: App) => Promise<Date> = (app: App) =>
+export const showDateModal: (plugin: GotoDatePlugin) => Promise<Date> = (
+	plugin
+) =>
 	new Promise((resolve) =>
-		new DateModal(app, ({ date }) => resolve(date)).open()
+		new DateModal(plugin, ({ date }) => resolve(date)).open()
 	);

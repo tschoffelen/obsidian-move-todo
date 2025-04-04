@@ -6,3 +6,40 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.move-todo-line {
+	position: relative;
+	padding-right: 4rem;
+}
+
+.move-todo-widget {
+	display: block;
+	width: 1.6rem;
+	height: 1.6rem;
+
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+
+	border-radius: 0.25rem;
+
+	background: url("https://mirri.link/lISaeBd") no-repeat center;
+	background-color: rgba(255, 255, 255, 0.2);
+	background-size: 1rem 1rem;
+
+	opacity: 0;
+
+	transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.move-todo-line.cm-active .move-todo-widget,
+.move-todo-line:hover .move-todo-widget {
+	opacity: 0.4;
+}
+
+.move-todo-widget:hover {
+	background-color: rgba(255, 255, 255, 0.3);
+	opacity: 1;
+}
