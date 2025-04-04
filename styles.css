@@ -1,12 +1,3 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
-
 .move-todo-line {
 	position: relative;
 	padding-right: 4rem;
@@ -34,7 +25,6 @@ If your plugin does not need CSS, delete this file.
 	transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
-.move-todo-line.cm-active .move-todo-widget,
 .move-todo-line:hover .move-todo-widget {
 	opacity: 0.4;
 }
